@@ -7,6 +7,9 @@ BACKGROUND = sdl2.ext.Color(0, 0, 0)
 RC_GREEN = sdl2.ext.Color(61, 192, 108)
 WHITE = sdl2.ext.Color(255, 255, 255)
 
+GHEIGHT = 600
+GWIDTH = 800
+
 UPRATE = -1
 DOWNRATE = 2
 HORIZ_SPEED = 3
@@ -31,13 +34,6 @@ class CollisionSystem(sdl2.ext.Applicator):
         left, top, right, bottom = sprite.area
         bleft, btop, bright, bbottom = self.player.sprite.area
 
-        # overlapping = (bleft < right and bright > left and
-        #         btop < bottom and bbottom > top)
-        # if(overlapping):
-        #     print("overlapping")
-        # else:
-        #     print("not overlapping")
-        # return overlapping
         return (bleft < right and bright > left and
                 btop < bottom and bbottom > top)
 
@@ -47,15 +43,6 @@ class CollisionSystem(sdl2.ext.Applicator):
             self.player.velocity.vy = UPRATE
         else:
             self.player.velocity.vy = DOWNRATE
-
-        # if (self.player.sprite.y <= self.miny or
-        #     self.player.sprite.y + self.player.sprite.size[1] >= self.maxy):
-        #     self.player.velocity.vy = -self.player.velocity.vy
-
-        # if (self.player.sprite.x <= self.minx or
-        #     self.player.sprite.x + self.player.sprite.size[0] >= self.maxx):
-        #     self.player.velocity.vx = -self.player.velocity.vx
-
 
 class MovementSystem(sdl2.ext.Applicator):
     def __init__(self, minx, miny, maxx, maxy):
@@ -127,7 +114,7 @@ class Rect(sdl2.ext.Entity):
 
 def run():
     sdl2.ext.init()
-    window = sdl2.ext.Window("The RCade Ball Game!", size=(800, 600))
+    window = sdl2.ext.Window("The RCade Ball Game!", size=(GWIDTH, GHEIGHT))
     window.show()
 
     if "-hardware" in sys.argv:
@@ -138,13 +125,10 @@ def run():
         print("Using software rendering")
         factory = sdl2.ext.SpriteFactory(sdl2.ext.SOFTWARE)
 
-    sp_rect = factory.from_color(RC_GREEN, size=(100, 20))
-    sp_ball = factory.from_color(WHITE, size=(20, 20))
-
     world = sdl2.ext.World()
 
-    movement = MovementSystem(0, 0, 800, 600)
-    collision = CollisionSystem(0, 0, 800, 600)
+    movement = MovementSystem(0, -20, 800, 620)
+    collision = CollisionSystem(0, 0, 800, 640)
     if factory.sprite_type == sdl2.ext.SOFTWARE:
         spriterenderer = SoftwareRenderSystem(window)
     else:
@@ -152,12 +136,20 @@ def run():
 
     world.add_system(movement)
     world.add_system(collision)
+
+    sp_rect1 = factory.from_color(RC_GREEN, size=(100, 20))
+    sp_rect2 = factory.from_color(RC_GREEN, size=(100, 20))
+    sp_platform = factory.from_color(RC_GREEN, size=(100, 20))
+    sp_ball = factory.from_color(WHITE, size=(20, 20))
+
     world.add_system(spriterenderer)
 
-    rect1 = Rect(world, sp_rect, 390, 290)
     player = Player(world, sp_ball, 390, 270)
     collision.player = player
-    collision.rects.append(rect1)
+    collision.rects.append(Rect(world, sp_rect1, 390, 290))
+    collision.rects.append(Rect(world, sp_rect2, 440, 390))
+    for i in range(0,int(GHEIGHT/100)):
+        print(i*100)
 
     running = True
     while running:
@@ -174,9 +166,13 @@ def run():
                 if event.key.keysym.sym in (sdl2.SDLK_LEFT, sdl2.SDLK_RIGHT):
                     player.velocity.vx = 0
 
-            # print(collision.rects[0].sprite.position)
-            for rect in collision.rects:
-                rect.velocity.vy = UPRATE
+        for rect in collision.rects:
+            rect.velocity.vy = UPRATE
+            if rect.sprite.position[1] == -20:
+                collision.rects.remove(rect)
+
+        if player.sprite.position[1] < 0:
+            running = False
 
         sdl2.SDL_Delay(10)
         world.process()
