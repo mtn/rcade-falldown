@@ -24,14 +24,17 @@ class CollisionSystem(sdl2.ext.Applicator):
 
     def _overlap(self, item):
         sprite = item[1]
-        if sprite == self.player.sprite:
+        if sprite == self.rects[0].sprite:
             return False
 
         left, top, right, bottom = sprite.area
         bleft, btop, bright, bbottom = self.player.sprite.area
 
-        return (bleft < right and bright > left and
+        overlaps = (bleft < right and bright > left and
                 btop < bottom and bbottom > top)
+        if overlaps:
+            print("Overlapping!")
+        return overlaps
 
     def process(self, world, componentsets):
         collitems = [comp for comp in componentsets if self._overlap(comp)]
@@ -159,8 +162,9 @@ def run():
     world.add_system(spriterenderer)
 
     rect1 = Rect(world, sp_rect, 390, 290)
-    player = Player(world, sp_ball, 0, 250)
+    player = Player(world, sp_ball, 390, 280)
     collision.player = player
+    collision.rects.append(rect1)
 
     running = True
     while running:
