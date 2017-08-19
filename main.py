@@ -25,58 +25,36 @@ class CollisionSystem(sdl2.ext.Applicator):
 
     def _overlap(self, collitem):
         sprite = collitem[1]
-        # print("invoked this")
-        # print("sprite {}".format(sprite))
         if sprite == self.player.sprite:
             return False
 
         left, top, right, bottom = sprite.area
         bleft, btop, bright, bbottom = self.player.sprite.area
 
-        overlapping = (bleft < right and bright > left and
-                btop < bottom and bbottom > top)
-        if(overlapping):
-            print("overlapping")
-        else:
-            print("not overlapping")
-        return overlapping
-        # return (bleft < right and bright > left and
+        # overlapping = (bleft < right and bright > left and
         #         btop < bottom and bbottom > top)
+        # if(overlapping):
+        #     print("overlapping")
+        # else:
+        #     print("not overlapping")
+        # return overlapping
+        return (bleft < right and bright > left and
+                btop < bottom and bbottom > top)
 
     def process(self, world, componentsets):
-        # print([ comp for comp in componentsets])
         collitems = [comp for comp in componentsets if self._overlap(comp)]
         if len(collitems) != 0:
             self.player.velocity.vy = UPRATE
-
-            print(collitems)
-            sprite = collitems[0][1]
-            print(collitems[0][1])
-            ballcentery = self.player.sprite.y + self.player.sprite.size[1] // 2
-            ballcentery2 = sprite.y + sprite.size[1] // 2
-            print(ballcentery,ballcentery2)
-            halfheight = sprite.size[1] // 2
-            stepsize = halfheight // 10
-            print(sprite.y)
-            paddlecentery = sprite.y + halfheight
-            if ballcentery < paddlecentery:
-                factor = (paddlecentery - ballcentery) // stepsize
-                self.player.velocity.vy = -int(round(factor))
-            elif ballcentery > paddlecentery:
-                factor = (ballcentery - paddlecentery) // stepsize
-                self.player.velocity.vy = int(round(factor))
-            else:
-                self.player.velocity.vy = -self.player.velocity.vy
         else:
             self.player.velocity.vy = DOWNRATE
 
-        if (self.player.sprite.y <= self.miny or
-            self.player.sprite.y + self.player.sprite.size[1] >= self.maxy):
-            self.player.velocity.vy = -self.player.velocity.vy
+        # if (self.player.sprite.y <= self.miny or
+        #     self.player.sprite.y + self.player.sprite.size[1] >= self.maxy):
+        #     self.player.velocity.vy = -self.player.velocity.vy
 
-        if (self.player.sprite.x <= self.minx or
-            self.player.sprite.x + self.player.sprite.size[0] >= self.maxx):
-            self.player.velocity.vx = -self.player.velocity.vx
+        # if (self.player.sprite.x <= self.minx or
+        #     self.player.sprite.x + self.player.sprite.size[0] >= self.maxx):
+        #     self.player.velocity.vx = -self.player.velocity.vx
 
 
 class MovementSystem(sdl2.ext.Applicator):
