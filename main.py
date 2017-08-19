@@ -29,17 +29,22 @@ class CollisionSystem(sdl2.ext.Applicator):
             return False
 
         left, top, right, bottom = sprite.area
-        bleft, btop, bright, bbottom = self.player.sprite.area
+        bleft, btop, bright, bbottom = self.rects[0].sprite.area
 
+        # overlapping = (bleft < right and bright > left and
+        #         btop < bottom and bbottom > top)
+        # if(overlapping):
+        #     print("overlapping")
+        # else:
+            # print("not overlapping")
+        # return overlapping
         return (bleft < right and bright > left and
                 btop < bottom and bbottom > top)
 
     def process(self, world, componentsets):
         collitems = [comp for comp in componentsets if self._overlap(comp)]
         if len(collitems) != 0:
-            print("bad")
             self.player.velocity.vy = UPRATE
-            # self.player.velocity.vy = -self.player.velocity.vy
 
             sprite = collitems[0][1]
             ballcentery = self.player.sprite.y + self.player.sprite.size[1] // 2
@@ -56,7 +61,6 @@ class CollisionSystem(sdl2.ext.Applicator):
             else:
                 self.player.velocity.vy = -self.player.velocity.vy
         else:
-            print("good")
             self.player.velocity.vy = DOWNRATE
 
         if (self.player.sprite.y <= self.miny or
@@ -133,6 +137,7 @@ class Rect(sdl2.ext.Entity):
     def __init__(self, world, sprite, posx=0, posy=0):
         self.sprite = sprite
         self.sprite.position= posx ,posy
+        self.velocity = Velocity()
 
 
 def run():
@@ -183,6 +188,11 @@ def run():
             elif event.type == sdl2.SDL_KEYUP:
                 if event.key.keysym.sym in (sdl2.SDLK_LEFT, sdl2.SDLK_RIGHT):
                     player.velocity.vx = 0
+
+            # print(collision.rects[0].sprite.position)
+            for rect in collision.rects:
+                rect.velocity.vy = UPRATE
+
         sdl2.SDL_Delay(10)
         world.process()
 
