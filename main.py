@@ -3,6 +3,7 @@ import sys
 import sdl2
 import sdl2.ext
 import random
+import math
 
 BACKGROUND = sdl2.ext.Color(0,0,0)
 RC_GREEN = sdl2.ext.Color(61,192,108)
@@ -113,6 +114,25 @@ class Rect(sdl2.ext.Entity):
         self.velocity = Velocity()
 
 
+def generate_row(collision,world,factory,y=GHEIGHT-1//100):
+    num_gaps = random.randint(1,5)
+    for j in range(0,num_gaps):
+        min_x = j * GWIDTH // num_gaps
+        gap_width = 40 + random.randint(0,20)
+        l_padding = random.randint(1,GWIDTH//num_gaps - gap_width-1)
+        r_width = math.ceil(GWIDTH/num_gaps - l_padding - gap_width)
+
+        collision.rects.append(Rect(
+            world,
+            factory.from_color(RC_GREEN,size=(l_padding,20)),
+            min_x,
+            y*100))
+        collision.rects.append(Rect(
+            world,
+            factory.from_color(RC_GREEN,size=(r_width,20)),
+            min_x+l_padding+gap_width,
+            y*100))
+
 def run():
     sdl2.ext.init()
     window = sdl2.ext.Window("The RCade Ball Game!",size=(GWIDTH,GHEIGHT))
@@ -147,39 +167,12 @@ def run():
 
     player = Player(world,sp_ball,390,270)
     collision.player = player
-    # collision.rects.append(Rect(world,factory.from_color(RC_GREEN,size=(100,20)),390,290))
-    # collision.rects.append(Rect(world,factory.from_color(RC_GREEN,size=(100,20)),530,290))
 
     for y in range(0,GHEIGHT//100):
-        num_gaps = random.randint(1,5)
-        for j in range(0,num_gaps):
-            min_x = j * GWIDTH // num_gaps
-            gap_width = 40 + random.randint(0,20)
-            l_padding = random.randint(0,GWIDTH//num_gaps - gap_width)
-            r_width = GWIDTH//num_gaps - l_padding - gap_width
-
-            collision.rects.append(Rect(
-                world,
-                factory.from_color(RC_GREEN,size=(l_padding,20)),
-                min_x,
-                y*100))
-            collision.rects.append(Rect(
-                world,
-                factory.from_color(RC_GREEN,size=(r_width,20)),
-                min_x+l_padding+gap_width,
-                y*100))
-            # collision.rects.append(Rect(
-            #     world,
-            #     factory.from_color(RC_GREEN,size=(10,20)),
-            #     10,
-            #     10))
-            # collision.rects.append(Rect(
-            #     world,
-            #     factory.from_color(RC_GREEN,size=(10,20)),
-            #     10,
-            #     10))
+        generate_row(collision,world,factory,y)
 
     running = True
+    time = 0
     while running:
         for event in sdl2.ext.get_events():
             if event.type == sdl2.SDL_QUIT:
@@ -196,8 +189,10 @@ def run():
 
         for rect in collision.rects:
             rect.velocity.vy = UPRATE
-            if rect.sprite.position[1] == -20:
-                collision.rects.remove(rect)
+
+        time += 1
+        if time % 100 == 0:
+            generate_row(collision,world,factory)
 
         if player.sprite.position[1] < 0:
             running = False
