@@ -11,6 +11,57 @@ UPRATE = 0
 BALL_SPEED = 3
 
 
+class CollisionSystem(sdl2.ext.Applicator):
+    def __init__(self, minx, miny, maxx, maxy):
+        super(CollisionSystem, self).__init__()
+        self.componenttypes = Velocity, sdl2.ext.Sprite
+        self.player = None
+        self.rects = []
+        self.minx = minx
+        self.miny = miny
+        self.maxx = maxx
+        self.maxy = maxy
+
+    def _overlap(self, item):
+        sprite = item[1]
+        if sprite == self.player.sprite:
+            return False
+
+        left, top, right, bottom = sprite.area
+        bleft, btop, bright, bbottom = self.player.sprite.area
+
+        return (bleft < right and bright > left and
+                btop < bottom and bbottom > top)
+
+    def process(self, world, componentsets):
+        collitems = [comp for comp in componentsets if self._overlap(comp)]
+        if len(collitems) != 0:
+            self.player.velocity.vx = -self.player.velocity.vx
+
+            sprite = collitems[0][1]
+            ballcentery = self.player.sprite.y + self.player.sprite.size[1] // 2
+            halfheight = sprite.size[1] // 2
+            stepsize = halfheight // 10
+            degrees = 0.7
+            paddlecentery = sprite.y + halfheight
+            if ballcentery < paddlecentery:
+                factor = (paddlecentery - ballcentery) // stepsize
+                self.player.velocity.vy = -int(round(factor * degrees))
+            elif ballcentery > paddlecentery:
+                factor = (ballcentery - paddlecentery) // stepsize
+                self.player.velocity.vy = int(round(factor * degrees))
+            else:
+                self.player.velocity.vy = -self.player.velocity.vy
+
+        if (self.player.sprite.y <= self.miny or
+            self.player.sprite.y + self.player.sprite.size[1] >= self.maxy):
+            self.player.velocity.vy = -self.player.velocity.vy
+
+        if (self.player.sprite.x <= self.minx or
+            self.player.sprite.x + self.player.sprite.size[0] >= self.maxx):
+            self.player.velocity.vx = -self.player.velocity.vx
+
+
 class MovementSystem(sdl2.ext.Applicator):
     def __init__(self, minx, miny, maxx, maxy):
         super(MovementSystem, self).__init__()
@@ -64,7 +115,6 @@ class Velocity(object):
         self.vy = 0
 
 
-
 class Player(sdl2.ext.Entity):
     def __init__(self, world, sprite, posx=0, posy=0, score=0):
         self.sprite = sprite
@@ -74,13 +124,12 @@ class Player(sdl2.ext.Entity):
 
 
 class Rect(sdl2.ext.Entity):
-    def __init__(self, world, sprite, posy=0):
+    def __init__(self, world, sprite, posx=0, posy=0):
         self.sprite = sprite
-        self.sprite = posy
+        self.sprite.position= posx ,posy
 
 
 def run():
-    print("starting")
     sdl2.ext.init()
     window = sdl2.ext.Window("The RC Ball Game!", size=(800, 600))
     window.show()
@@ -99,16 +148,19 @@ def run():
     world = sdl2.ext.World()
 
     movement = MovementSystem(0, 0, 800, 600)
+    collision = CollisionSystem(0, 0, 800, 600)
     if factory.sprite_type == sdl2.ext.SOFTWARE:
         spriterenderer = SoftwareRenderSystem(window)
     else:
         spriterenderer = TextureRenderSystem(renderer)
 
     world.add_system(movement)
+    world.add_system(collision)
     world.add_system(spriterenderer)
 
+    rect1 = Rect(world, sp_rect, 390, 290)
     player = Player(world, sp_ball, 0, 250)
-    rect1 = Rect(world, sp_rect, 290)
+    collision.player = player
 
     running = True
     while running:
