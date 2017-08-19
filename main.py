@@ -7,7 +7,7 @@ BACKGROUND = sdl2.ext.Color(0, 0, 0)
 RC_GREEN = sdl2.ext.Color(61, 192, 108)
 WHITE = sdl2.ext.Color(255, 255, 255)
 
-PADDLE_SPEED = 0
+UPRATE = 0
 BALL_SPEED = 3
 
 
@@ -29,11 +29,9 @@ class MovementSystem(sdl2.ext.Applicator):
             sprite.x = max(self.minx, sprite.x)
             sprite.y = max(self.miny, sprite.y)
 
-            pmaxx = sprite.x + swidth
-            pmaxy = sprite.y + sheight
-            if pmaxx > self.maxx:
+            if sprite.x + swidth > self.maxx:
                 sprite.x = self.maxx - swidth
-            if pmaxy > self.maxy:
+            if sprite.y + sheight > self.maxy:
                 sprite.y = self.maxy - sheight
 
 
@@ -66,25 +64,19 @@ class Velocity(object):
         self.vy = 0
 
 
-class PlayerData(object):
-    def __init__(self):
-        super(PlayerData, self).__init__()
-        self.points = 0
-
 
 class Player(sdl2.ext.Entity):
-    def __init__(self, world, sprite, posx=0, posy=0):
+    def __init__(self, world, sprite, posx=0, posy=0, score=0):
         self.sprite = sprite
         self.sprite.position = posx, posy
+        self.playerscore= score
         self.velocity = Velocity()
-        self.playerdata = PlayerData()
 
 
-class Ball(sdl2.ext.Entity):
-    def __init__(self, world, sprite, posx=0, posy=0):
+class Rect(sdl2.ext.Entity):
+    def __init__(self, world, sprite, posy=0):
         self.sprite = sprite
-        self.sprite.position = posx, posy
-        self.velocity = Velocity()
+        self.sprite = posy
 
 
 def run():
@@ -101,10 +93,7 @@ def run():
         print("Using software rendering")
         factory = sdl2.ext.SpriteFactory(sdl2.ext.SOFTWARE)
 
-    # Create the paddles - we want white ones. To keep it easy enough for us,
-    # we create a set of surfaces that can be used for Texture- and
-    # Software-based sprites.
-    sp_paddle = factory.from_color(RC_GREEN, size=(100, 20))
+    sp_rect = factory.from_color(RC_GREEN, size=(100, 20))
     sp_ball = factory.from_color(WHITE, size=(20, 20))
 
     world = sdl2.ext.World()
@@ -119,7 +108,7 @@ def run():
     world.add_system(spriterenderer)
 
     player = Player(world, sp_ball, 0, 250)
-    ball = Ball(world, sp_paddle, 390, 290)
+    rect1 = Rect(world, sp_rect, 290)
 
     running = True
     while running:
@@ -133,8 +122,8 @@ def run():
                 elif event.key.keysym.sym == sdl2.SDLK_RIGHT:
                     player.velocity.vx = BALL_SPEED
             elif event.type == sdl2.SDL_KEYUP:
-                if event.key.keysym.sym in (sdl2.SDLK_UP, sdl2.SDLK_DOWN):
-                    player.velocity.vy = 0
+                if event.key.keysym.sym in (sdl2.SDLK_LEFT, sdl2.SDLK_RIGHT):
+                    player.velocity.vx = 0
         sdl2.SDL_Delay(10)
         world.process()
 

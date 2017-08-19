@@ -100,3 +100,4 @@ ENV/
 
 *.swp
 .DS_Store
+test.py
