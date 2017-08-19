@@ -7,7 +7,8 @@ BACKGROUND = sdl2.ext.Color(0, 0, 0)
 RC_GREEN = sdl2.ext.Color(61, 192, 108)
 WHITE = sdl2.ext.Color(255, 255, 255)
 
-UPRATE = 0
+UPRATE = 3
+DOWNRATE = 5
 BALL_SPEED = 3
 
 
@@ -30,16 +31,15 @@ class CollisionSystem(sdl2.ext.Applicator):
         left, top, right, bottom = sprite.area
         bleft, btop, bright, bbottom = self.player.sprite.area
 
-        overlaps = (bleft < right and bright > left and
+        return (bleft < right and bright > left and
                 btop < bottom and bbottom > top)
-        if overlaps:
-            print("Overlapping!")
-        return overlaps
 
     def process(self, world, componentsets):
         collitems = [comp for comp in componentsets if self._overlap(comp)]
         if len(collitems) != 0:
-            self.player.velocity.vx = -self.player.velocity.vx
+            print("bad")
+            self.player.velocity.vy = UPRATE
+            # self.player.velocity.vy = -self.player.velocity.vy
 
             sprite = collitems[0][1]
             ballcentery = self.player.sprite.y + self.player.sprite.size[1] // 2
@@ -55,6 +55,9 @@ class CollisionSystem(sdl2.ext.Applicator):
                 self.player.velocity.vy = int(round(factor * degrees))
             else:
                 self.player.velocity.vy = -self.player.velocity.vy
+        else:
+            print("good")
+            self.player.velocity.vy = DOWNRATE
 
         if (self.player.sprite.y <= self.miny or
             self.player.sprite.y + self.player.sprite.size[1] >= self.maxy):
