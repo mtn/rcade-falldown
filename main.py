@@ -3,10 +3,11 @@ import sys
 import sdl2
 import sdl2.ext
 
-BLACK = sdl2.ext.Color(0, 0, 0)
-RC_GREEN = sdl2.ext.Color(0, 255, 0)
+BACKGROUND = sdl2.ext.Color(0, 0, 0)
+RC_GREEN = sdl2.ext.Color(61, 192, 108)
 WHITE = sdl2.ext.Color(255, 255, 255)
-PADDLE_SPEED = 3
+
+PADDLE_SPEED = 0
 BALL_SPEED = 3
 
 
@@ -41,7 +42,7 @@ class SoftwareRenderSystem(sdl2.ext.SoftwareSpriteRenderSystem):
         super(SoftwareRenderSystem, self).__init__(window)
 
     def render(self, components):
-        sdl2.ext.fill(self.surface, BLACK)
+        sdl2.ext.fill(self.surface, BACKGROUND)
         super(SoftwareRenderSystem, self).render(components)
 
 
@@ -52,7 +53,7 @@ class TextureRenderSystem(sdl2.ext.TextureSpriteRenderSystem):
 
     def render(self, components):
         tmp = self.renderer.color
-        self.renderer.color = BLACK
+        self.renderer.color = BACKGROUND
         self.renderer.clear()
         self.renderer.color = tmp
         super(TextureRenderSystem, self).render(components)
@@ -103,7 +104,7 @@ def run():
     # Create the paddles - we want white ones. To keep it easy enough for us,
     # we create a set of surfaces that can be used for Texture- and
     # Software-based sprites.
-    sp_paddle1 = factory.from_color(RC_GREEN, size=(100, 20))
+    sp_paddle = factory.from_color(RC_GREEN, size=(100, 20))
     sp_ball = factory.from_color(WHITE, size=(20, 20))
 
     world = sdl2.ext.World()
@@ -117,11 +118,8 @@ def run():
     world.add_system(movement)
     world.add_system(spriterenderer)
 
-    player1 = Player(world, sp_paddle1, 0, 250)
-    ball = Ball(world, sp_ball, 390, 290)
-    print("ball init")
-    print(ball.velocity.vx)
-    ball.velocity.vx = -BALL_SPEED
+    player = Player(world, sp_ball, 0, 250)
+    ball = Ball(world, sp_paddle, 390, 290)
 
     running = True
     while running:
@@ -131,12 +129,12 @@ def run():
                 break
             if event.type == sdl2.SDL_KEYDOWN:
                 if event.key.keysym.sym == sdl2.SDLK_LEFT:
-                    player1.velocity.vx = -PADDLE_SPEED
+                    player.velocity.vx = -BALL_SPEED
                 elif event.key.keysym.sym == sdl2.SDLK_RIGHT:
-                    player1.velocity.vx = PADDLE_SPEED
+                    player.velocity.vx = BALL_SPEED
             elif event.type == sdl2.SDL_KEYUP:
                 if event.key.keysym.sym in (sdl2.SDLK_UP, sdl2.SDLK_DOWN):
-                    player1.velocity.vy = 0
+                    player.velocity.vy = 0
         sdl2.SDL_Delay(10)
         world.process()
 
