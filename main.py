@@ -7,9 +7,9 @@ BACKGROUND = sdl2.ext.Color(0, 0, 0)
 RC_GREEN = sdl2.ext.Color(61, 192, 108)
 WHITE = sdl2.ext.Color(255, 255, 255)
 
-UPRATE = 3
-DOWNRATE = 5
-BALL_SPEED = 3
+UPRATE = -1
+DOWNRATE = 2
+HORIZ_SPEED = 3
 
 
 class CollisionSystem(sdl2.ext.Applicator):
@@ -23,41 +23,48 @@ class CollisionSystem(sdl2.ext.Applicator):
         self.maxx = maxx
         self.maxy = maxy
 
-    def _overlap(self, item):
-        sprite = item[1]
-        if sprite == self.rects[0].sprite:
+    def _overlap(self, collitem):
+        sprite = collitem[1]
+        # print("invoked this")
+        # print("sprite {}".format(sprite))
+        if sprite == self.player.sprite:
             return False
 
         left, top, right, bottom = sprite.area
-        bleft, btop, bright, bbottom = self.rects[0].sprite.area
+        bleft, btop, bright, bbottom = self.player.sprite.area
 
-        # overlapping = (bleft < right and bright > left and
-        #         btop < bottom and bbottom > top)
-        # if(overlapping):
-        #     print("overlapping")
-        # else:
-            # print("not overlapping")
-        # return overlapping
-        return (bleft < right and bright > left and
+        overlapping = (bleft < right and bright > left and
                 btop < bottom and bbottom > top)
+        if(overlapping):
+            print("overlapping")
+        else:
+            print("not overlapping")
+        return overlapping
+        # return (bleft < right and bright > left and
+        #         btop < bottom and bbottom > top)
 
     def process(self, world, componentsets):
+        # print([ comp for comp in componentsets])
         collitems = [comp for comp in componentsets if self._overlap(comp)]
         if len(collitems) != 0:
             self.player.velocity.vy = UPRATE
 
+            print(collitems)
             sprite = collitems[0][1]
+            print(collitems[0][1])
             ballcentery = self.player.sprite.y + self.player.sprite.size[1] // 2
+            ballcentery2 = sprite.y + sprite.size[1] // 2
+            print(ballcentery,ballcentery2)
             halfheight = sprite.size[1] // 2
             stepsize = halfheight // 10
-            degrees = 0.7
+            print(sprite.y)
             paddlecentery = sprite.y + halfheight
             if ballcentery < paddlecentery:
                 factor = (paddlecentery - ballcentery) // stepsize
-                self.player.velocity.vy = -int(round(factor * degrees))
+                self.player.velocity.vy = -int(round(factor))
             elif ballcentery > paddlecentery:
                 factor = (ballcentery - paddlecentery) // stepsize
-                self.player.velocity.vy = int(round(factor * degrees))
+                self.player.velocity.vy = int(round(factor))
             else:
                 self.player.velocity.vy = -self.player.velocity.vy
         else:
@@ -142,7 +149,7 @@ class Rect(sdl2.ext.Entity):
 
 def run():
     sdl2.ext.init()
-    window = sdl2.ext.Window("The RC Ball Game!", size=(800, 600))
+    window = sdl2.ext.Window("The RCade Ball Game!", size=(800, 600))
     window.show()
 
     if "-hardware" in sys.argv:
@@ -170,7 +177,7 @@ def run():
     world.add_system(spriterenderer)
 
     rect1 = Rect(world, sp_rect, 390, 290)
-    player = Player(world, sp_ball, 390, 280)
+    player = Player(world, sp_ball, 390, 270)
     collision.player = player
     collision.rects.append(rect1)
 
@@ -182,9 +189,9 @@ def run():
                 break
             if event.type == sdl2.SDL_KEYDOWN:
                 if event.key.keysym.sym == sdl2.SDLK_LEFT:
-                    player.velocity.vx = -BALL_SPEED
+                    player.velocity.vx = -HORIZ_SPEED
                 elif event.key.keysym.sym == sdl2.SDLK_RIGHT:
-                    player.velocity.vx = BALL_SPEED
+                    player.velocity.vx = HORIZ_SPEED
             elif event.type == sdl2.SDL_KEYUP:
                 if event.key.keysym.sym in (sdl2.SDLK_LEFT, sdl2.SDLK_RIGHT):
                     player.velocity.vx = 0
