@@ -20,7 +20,7 @@ height_shift = 200//SCALE
 
 static_components = []
 
-UPRATE = -1//SCALE
+UPRATE = -1
 DOWNRATE = 5//SCALE
 HORIZ_SPEED = 3//SCALE
 
@@ -175,12 +175,13 @@ def run():
 
     outer_top = Rect(world,factory.from_color(WHITE,size=(1200//SCALE,20//SCALE)),0//SCALE,0//SCALE)
     static_components.append(outer_top.sprite)
-    outer_bottom = Rect(world,factory.from_color(WHITE,size=(1200//SCALE,20//SCALE)),0//SCALE,(1500-200)//SCALE)
+    outer_bottom = Rect(world,factory.from_color(WHITE,size=(1200//SCALE,20//SCALE)),0//SCALE,(1500-20)//SCALE)
     static_components.append(outer_bottom.sprite)
     outer_left = Rect(world,factory.from_color(WHITE,size=(20//SCALE,1500//SCALE)),0//SCALE,0//SCALE)
     static_components.append(outer_left.sprite)
-    outer_right = Rect(world,factory.from_color(WHITE,size=(20//SCALE,1500//SCALE)),(1200-20)//SCALE,0//SCALE)
+    outer_right= Rect(world,factory.from_color(WHITE,size=(20//SCALE,1500//SCALE)),(1200-20)//SCALE,0//SCALE)
     static_components.append(outer_right.sprite)
+
     border_rect_top = Rect(world,factory.from_color(WHITE,size=(1000//SCALE,100//SCALE)),100//SCALE,100//SCALE)
     static_components.append(border_rect_top.sprite)
     border_rect_bottom = Rect(world,factory.from_color(WHITE,size=(1000//SCALE,100//SCALE)),100//SCALE,800//SCALE)
@@ -189,20 +190,35 @@ def run():
     static_components.append(border_rect_left.sprite)
     border_rect_right = Rect(world,factory.from_color(WHITE,size=(100//SCALE,600//SCALE)),1000//SCALE,200//SCALE)
     static_components.append(border_rect_right.sprite)
-    base_mid_left = Rect(world,factory.from_color(WHITE,size=(200//SCALE,100//SCALE)),200//SCALE,1000//SCALE)
-    static_components.append(base_mid_left.sprite)
-    base_mid_right = Rect(world,factory.from_color(WHITE,size=(200//SCALE,100//SCALE)),800//SCALE,1000//SCALE)
-    static_components.append(base_mid_right.sprite)
-    base_mid_right2 = Rect(world,factory.from_color(WHITE,size=(30//SCALE,100//SCALE)),970//SCALE,1100//SCALE)
-    static_components.append(base_mid_right2.sprite)
-    # base_lower_left = Rect(world,factory.from_color(WHITE,size=(100,200)),100,1100)
-    # static_components.append(base_lower_left.sprite)
-    # base_lower_right = Rect(world,factory.from_color(WHITE,size=(100,200)),1000,1100)
-    # static_components.append(base_lower_right.sprite)
-    # base_lower_left2 = Rect(world,factory.from_color(WHITE,size=(100,200)),0,1200)
-    # static_components.append(base_lower_left2.sprite)
 
-    player = Player(world,factory.from_color(WHITE,size=(20//SCALE,20//SCALE)),(390+width_shift)//SCALE,(270+width_shift)//SCALE)
+    base_mid_left = Rect(world,factory.from_color(WHITE,size=(350//SCALE,100//SCALE)),0//SCALE,1000//SCALE)
+    static_components.append(base_mid_left.sprite)
+    base_mid_right = Rect(world,factory.from_color(WHITE,size=(350//SCALE,100//SCALE)),850//SCALE,1000//SCALE)
+    static_components.append(base_mid_right.sprite)
+
+    base_mid_left2= Rect(world,factory.from_color(WHITE,size=(100//SCALE,100//SCALE)),1100//SCALE,1100//SCALE)
+    static_components.append(base_mid_left2.sprite)
+    base_mid_right2 = Rect(world,factory.from_color(WHITE,size=(100//SCALE,100//SCALE)),0//SCALE,1100//SCALE)
+    static_components.append(base_mid_right2.sprite)
+
+    letter0 = Rect(world,factory.from_color(WHITE,size=(90//SCALE,90//SCALE)),300//SCALE,1210//SCALE)
+    static_components.append(letter0.sprite)
+    letter1 = Rect(world,factory.from_color(WHITE,size=(90//SCALE,90//SCALE)),480//SCALE,1210//SCALE)
+    static_components.append(letter1.sprite)
+    letter2 = Rect(world,factory.from_color(WHITE,size=(90//SCALE,90//SCALE)),660//SCALE,1210//SCALE)
+    static_components.append(letter2.sprite)
+    letter3 = Rect(world,factory.from_color(WHITE,size=(90//SCALE,90//SCALE)),840//SCALE,1210//SCALE)
+    static_components.append(letter3.sprite)
+    letter4 = Rect(world,factory.from_color(WHITE,size=(90//SCALE,90//SCALE)),210//SCALE,1300//SCALE)
+    static_components.append(letter4.sprite)
+    letter5 = Rect(world,factory.from_color(WHITE,size=(90//SCALE,90//SCALE)),390//SCALE,1300//SCALE)
+    static_components.append(letter5.sprite)
+    letter6 = Rect(world,factory.from_color(WHITE,size=(90//SCALE,90//SCALE)),570//SCALE,1300//SCALE)
+    static_components.append(letter6.sprite)
+    letter7 = Rect(world,factory.from_color(WHITE,size=(90//SCALE,90//SCALE)),750//SCALE,1300//SCALE)
+    static_components.append(letter7.sprite)
+
+    player = Player(world,factory.from_color(WHITE,size=(20//SCALE,20//SCALE)),200+width_shift,300+height_shift)
     movement.player = player
 
     for y in range(0,(G_HEIGHT)//100):
@@ -225,7 +241,6 @@ def run():
                     player.velocity.vx = 0
 
         for rect in movement.rects:
-            # rect.velocity.vy = 0
             rect.velocity.vy = UPRATE
 
             _,posy = rect.sprite.position
