@@ -43,37 +43,39 @@ class MovementSystem(sdl2.ext.Applicator):
             if not sprite == self.player.sprite:
                 sprite.x += velocity.vx
                 sprite.y += velocity.vy
+
             else:
                 velocity.vy = DOWNRATE
                 if not self.will_collide(velocity):
-                    print("would not collide")
                     sprite.x += velocity.vx
                     sprite.y += velocity.vy
                 else:
                     velocity.vy = UPRATE
                     if not self.will_collide(velocity):
-                        sprite.x += velocity.vx
-                        sprite.y += velocity.vy
+                        for y in reversed(range(UPRATE,DOWNRATE)):
+                            velocity.vy = y
+                            if not self.will_collide(velocity):
+                                sprite.y += velocity.vy
+                                sprite.x += velocity.vx
+                                break
                     else:
                         vx = velocity.vx
-                        print("first {}".format(vx))
                         velocity.vx = 0
                         if not self.will_collide(velocity):
                             sprite.y += velocity.vy
-                        else:
-                            velocity.vy = 0
-                            velocity.vx = vx
-                            print("second {}".format(velocity.vx))
-                            if not self.will_collide(velocity):
-                                sprite.x += velocity.vx
 
             sprite.x = max(self.minx,sprite.x)
             sprite.y = max(self.miny,sprite.y)
 
             if sprite.x + swidth > self.maxx:
                 sprite.x = self.maxx - swidth
-            if sprite.y + sheight > self.maxy:
-                sprite.y = self.maxy - sheight
+            if not sprite == self.player.sprite:
+                if sprite.y + sheight > self.maxy:
+                    sprite.y = self.maxy - sheight
+            else:
+                if sprite.y + sheight > (self.maxy - 20):
+                    # print("in here")
+                    sprite.y = self.maxy - 20 - sheight
 
 
 class SoftwareRenderSystem(sdl2.ext.SoftwareSpriteRenderSystem):
