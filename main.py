@@ -1,4 +1,4 @@
-"""The RC Ball Game!"""
+"""The RCade Ball Game!"""
 import sys
 import sdl2
 import sdl2.ext
@@ -17,49 +17,40 @@ DOWNRATE = 2
 HORIZ_SPEED = 3
 
 
-class CollisionSystem(sdl2.ext.Applicator):
-    def __init__(self,minx,miny,maxx,maxy):
-        super(CollisionSystem,self).__init__()
-        self.componenttypes = Velocity,sdl2.ext.Sprite
-        self.player = None
-        self.rects = []
-        self.minx = minx
-        self.miny = miny
-        self.maxx = maxx
-        self.maxy = maxy
-
-    def _overlap(self,collitem):
-        sprite = collitem[1]
-        if sprite == self.player.sprite:
-            return False
-
-        left,top,right,bottom = sprite.area
-        bleft,btop,bright,bbottom = self.player.sprite.area
-
-        return (bleft < right and bright > left and
-                btop < bottom and bbottom > top)
-
-    def process(self,world,componentsets):
-        collitems = [comp for comp in componentsets if self._overlap(comp)]
-        if len(collitems) != 0:
-            self.player.velocity.vy = UPRATE
-        else:
-            self.player.velocity.vy = DOWNRATE
 
 class MovementSystem(sdl2.ext.Applicator):
-    def __init__(self,minx,miny,maxx,maxy):
+    def __init__(self,minx,miny,maxx,maxy,player=None,rects=[]):
         super(MovementSystem,self).__init__()
         self.componenttypes = Velocity,sdl2.ext.Sprite
         self.minx = minx
         self.miny = miny
         self.maxx = maxx
         self.maxy = maxy
+        self.player = player
+        self.rects = rects
+
+    def will_collide(self,velocity):
+        pleft,ptop,pright,pbottom = self.player.sprite.area
+        for rect in self.rects:
+            left,top,right,bottom = rect.sprite.area
+
+            if pleft < right and pright > left and ptop < bottom and pbottom > top:
+                return True
+        return False
 
     def process(self,world,componentsets):
         for velocity,sprite in componentsets:
-            swidth,sheight = sprite.size
-            sprite.x += velocity.vx
-            sprite.y += velocity.vy
+            if not sprite == self.player.sprite:
+                sprite.x += velocity.vx
+                sprite.y += velocity.vy
+            else:
+                print("hi")
+                if not self.will_collide(velocity):
+                    print("not colliding")
+                    sprite.x += velocity.vx
+                    sprite.y += velocity.vy
+                else:
+                    print("colliding")
 
             sprite.x = max(self.minx,sprite.x)
             sprite.y = max(self.miny,sprite.y)
@@ -114,7 +105,7 @@ class Rect(sdl2.ext.Entity):
         self.velocity = Velocity()
 
 
-def generate_row(collision,world,factory,y=GHEIGHT-1//100):
+def generate_row(movement,world,factory,y=GHEIGHT-1//100):
     num_gaps = random.randint(1,5)
     for j in range(0,num_gaps):
         min_x = j * GWIDTH // num_gaps
@@ -122,12 +113,12 @@ def generate_row(collision,world,factory,y=GHEIGHT-1//100):
         l_padding = random.randint(1,GWIDTH//num_gaps - gap_width-1)
         r_width = math.ceil(GWIDTH/num_gaps - l_padding - gap_width)
 
-        collision.rects.append(Rect(
+        movement.rects.append(Rect(
             world,
             factory.from_color(RC_GREEN,size=(l_padding,20)),
             min_x,
             y*100))
-        collision.rects.append(Rect(
+        movement.rects.append(Rect(
             world,
             factory.from_color(RC_GREEN,size=(r_width,20)),
             min_x+l_padding+gap_width,
@@ -138,38 +129,30 @@ def run():
     window = sdl2.ext.Window("The RCade Ball Game!",size=(GWIDTH,GHEIGHT))
     window.show()
 
-    if "-hardware" in sys.argv:
-        print("Using hardware (gpu) acceleration")
-        renderer = sdl2.ext.Renderer(window)
-        factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE,renderer=renderer)
-    else:
+    if "-software" in sys.argv:
         print("Using software rendering")
         factory = sdl2.ext.SpriteFactory(sdl2.ext.SOFTWARE)
+    else:
+        print("(Default) Using hardware acceleration")
+        renderer = sdl2.ext.Renderer(window)
+        factory = sdl2.ext.SpriteFactory(sdl2.ext.TEXTURE,renderer=renderer)
 
     world = sdl2.ext.World()
 
     movement = MovementSystem(0,-20,800,620)
-    collision = CollisionSystem(0,0,800,640)
     if factory.sprite_type == sdl2.ext.SOFTWARE:
         spriterenderer = SoftwareRenderSystem(window)
     else:
         spriterenderer = TextureRenderSystem(renderer)
 
     world.add_system(movement)
-    world.add_system(collision)
-
-    sp_rect1 = factory.from_color(RC_GREEN,size=(100,20))
-    sp_rect2 = factory.from_color(RC_GREEN,size=(100,20))
-    sp_platform = factory.from_color(RC_GREEN,size=(100,20))
-    sp_ball = factory.from_color(WHITE,size=(20,20))
-
     world.add_system(spriterenderer)
 
-    player = Player(world,sp_ball,390,270)
-    collision.player = player
+    player = Player(world,factory.from_color(WHITE,size=(20,20)),390,270)
+    movement.player = player
 
-    for y in range(0,GHEIGHT//100):
-        generate_row(collision,world,factory,y)
+    for y in range(0,(GHEIGHT+100)//100):
+        generate_row(movement,world,factory,y)
 
     running = True
     time = 0
@@ -187,12 +170,12 @@ def run():
                 if event.key.keysym.sym in (sdl2.SDLK_LEFT,sdl2.SDLK_RIGHT):
                     player.velocity.vx = 0
 
-        for rect in collision.rects:
+        for rect in movement.rects:
             rect.velocity.vy = UPRATE
 
         time += 1
         if time % 100 == 0:
-            generate_row(collision,world,factory)
+            generate_row(movement,world,factory)
 
         if player.sprite.position[1] < 0:
             running = False
