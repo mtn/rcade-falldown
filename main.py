@@ -13,9 +13,8 @@ GHEIGHT = 600
 GWIDTH = 800
 
 UPRATE = -1
-DOWNRATE = 2
+DOWNRATE = 5
 HORIZ_SPEED = 3
-
 
 
 class MovementSystem(sdl2.ext.Applicator):
@@ -34,23 +33,39 @@ class MovementSystem(sdl2.ext.Applicator):
         for rect in self.rects:
             left,top,right,bottom = rect.sprite.area
 
-            if pleft < right and pright > left and ptop < bottom and pbottom > top:
-                return True
-        return False
+            if pleft+velocity.vx < right and pright+velocity.vx > left and ptop+velocity.vy < bottom and pbottom+velocity.vy > top:
+                return rect
+        return None
 
     def process(self,world,componentsets):
         for velocity,sprite in componentsets:
+            swidth,sheight = sprite.size
             if not sprite == self.player.sprite:
                 sprite.x += velocity.vx
                 sprite.y += velocity.vy
             else:
-                print("hi")
+                velocity.vy = DOWNRATE
                 if not self.will_collide(velocity):
-                    print("not colliding")
+                    print("would not collide")
                     sprite.x += velocity.vx
                     sprite.y += velocity.vy
                 else:
-                    print("colliding")
+                    velocity.vy = UPRATE
+                    if not self.will_collide(velocity):
+                        sprite.x += velocity.vx
+                        sprite.y += velocity.vy
+                    else:
+                        vx = velocity.vx
+                        print("first {}".format(vx))
+                        velocity.vx = 0
+                        if not self.will_collide(velocity):
+                            sprite.y += velocity.vy
+                        else:
+                            velocity.vy = 0
+                            velocity.vx = vx
+                            print("second {}".format(velocity.vx))
+                            if not self.will_collide(velocity):
+                                sprite.x += velocity.vx
 
             sprite.x = max(self.minx,sprite.x)
             sprite.y = max(self.miny,sprite.y)
@@ -171,6 +186,7 @@ def run():
                     player.velocity.vx = 0
 
         for rect in movement.rects:
+            # rect.velocity.vy = 0
             rect.velocity.vy = UPRATE
 
         time += 1
