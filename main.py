@@ -5,16 +5,24 @@ import sdl2.ext
 import random
 import math
 
+SCALE = 2
 BACKGROUND = sdl2.ext.Color(0,0,0)
 RC_GREEN = sdl2.ext.Color(61,192,108)
 WHITE = sdl2.ext.Color(255,255,255)
 
-GHEIGHT = 600
-GWIDTH = 800
+W_HEIGHT = 1500//SCALE
+W_WIDTH = 1200//SCALE
+G_HEIGHT = 600//SCALE
+G_WIDTH = 800//SCALE
 
-UPRATE = -1
-DOWNRATE = 5
-HORIZ_SPEED = 3
+width_shift = 200//SCALE
+height_shift = 200//SCALE
+
+static_components = []
+
+UPRATE = -1//SCALE
+DOWNRATE = 5//SCALE
+HORIZ_SPEED = 3//SCALE
 
 
 class MovementSystem(sdl2.ext.Applicator):
@@ -40,10 +48,10 @@ class MovementSystem(sdl2.ext.Applicator):
     def process(self,world,componentsets):
         for velocity,sprite in componentsets:
             swidth,sheight = sprite.size
+
             if not sprite == self.player.sprite:
                 sprite.x += velocity.vx
                 sprite.y += velocity.vy
-
             else:
                 velocity.vy = DOWNRATE
                 if not self.will_collide(velocity):
@@ -64,18 +72,18 @@ class MovementSystem(sdl2.ext.Applicator):
                         if not self.will_collide(velocity):
                             sprite.y += velocity.vy
 
-            sprite.x = max(self.minx,sprite.x)
-            sprite.y = max(self.miny,sprite.y)
+            if sprite not in static_components:
+                sprite.x = max(self.minx,sprite.x)
+                sprite.y = max(self.miny,sprite.y)
 
-            if sprite.x + swidth > self.maxx:
-                sprite.x = self.maxx - swidth
-            if not sprite == self.player.sprite:
-                if sprite.y + sheight > self.maxy:
-                    sprite.y = self.maxy - sheight
-            else:
-                if sprite.y + sheight > (self.maxy - 20):
-                    # print("in here")
-                    sprite.y = self.maxy - 20 - sheight
+                if sprite.x + swidth > self.maxx:
+                    sprite.x = self.maxx - swidth
+                if not sprite == self.player.sprite:
+                    if sprite.y + sheight > self.maxy:
+                        sprite.y = self.maxy - sheight
+                else:
+                    if sprite.y + sheight > (self.maxy - 10):
+                        sprite.y = self.maxy - 10 - sheight
 
 
 class SoftwareRenderSystem(sdl2.ext.SoftwareSpriteRenderSystem):
@@ -84,7 +92,7 @@ class SoftwareRenderSystem(sdl2.ext.SoftwareSpriteRenderSystem):
 
     def render(self,components):
         sdl2.ext.fill(self.surface,BACKGROUND)
-        super(SoftwareRenderSystem,self).render(components)
+        super(SoftwareRenderSystem,self).render(reversed(components))
 
 
 class TextureRenderSystem(sdl2.ext.TextureSpriteRenderSystem):
@@ -97,7 +105,7 @@ class TextureRenderSystem(sdl2.ext.TextureSpriteRenderSystem):
         self.renderer.color = BACKGROUND
         self.renderer.clear()
         self.renderer.color = tmp
-        super(TextureRenderSystem,self).render(components)
+        super(TextureRenderSystem,self).render(reversed(components))
 
 
 class Velocity(object):
@@ -118,32 +126,32 @@ class Player(sdl2.ext.Entity):
 class Rect(sdl2.ext.Entity):
     def __init__(self,world,sprite,posx=0,posy=0):
         self.sprite = sprite
-        self.sprite.position= posx ,posy
+        self.sprite.position = posx, posy
         self.velocity = Velocity()
 
 
-def generate_row(movement,world,factory,y=GHEIGHT-1//100):
+def generate_row(movement,world,factory,y=G_HEIGHT//100):
     num_gaps = random.randint(1,5)
     for j in range(0,num_gaps):
-        min_x = j * GWIDTH // num_gaps
-        gap_width = 40 + random.randint(0,20)
-        l_padding = random.randint(1,GWIDTH//num_gaps - gap_width-1)
-        r_width = math.ceil(GWIDTH/num_gaps - l_padding - gap_width)
+        min_x = j * G_WIDTH // num_gaps
+        gap_width = 20 + random.randint(0,10)
+        l_padding = random.randint(1,G_WIDTH//num_gaps - gap_width-1)
+        r_width = math.ceil(G_WIDTH/num_gaps - l_padding - gap_width)
 
         movement.rects.append(Rect(
             world,
-            factory.from_color(RC_GREEN,size=(l_padding,20)),
-            min_x,
-            y*100))
+            factory.from_color(RC_GREEN,size=(l_padding,20//SCALE)),
+            (min_x+width_shift),
+            y*100+height_shift+50))
         movement.rects.append(Rect(
             world,
-            factory.from_color(RC_GREEN,size=(r_width,20)),
-            min_x+l_padding+gap_width,
-            y*100))
+            factory.from_color(RC_GREEN,size=(r_width,20//SCALE)),
+            min_x+l_padding+gap_width+width_shift,
+            y*100+height_shift+50))
 
 def run():
     sdl2.ext.init()
-    window = sdl2.ext.Window("The RCade Ball Game!",size=(GWIDTH,GHEIGHT))
+    window = sdl2.ext.Window("RCade Falldown!",size=(W_WIDTH,W_HEIGHT))
     window.show()
 
     if "-software" in sys.argv:
@@ -156,7 +164,7 @@ def run():
 
     world = sdl2.ext.World()
 
-    movement = MovementSystem(0,-20,800,620)
+    movement = MovementSystem(width_shift,-10+height_shift,400+width_shift,310+height_shift)
     if factory.sprite_type == sdl2.ext.SOFTWARE:
         spriterenderer = SoftwareRenderSystem(window)
     else:
@@ -165,10 +173,39 @@ def run():
     world.add_system(movement)
     world.add_system(spriterenderer)
 
-    player = Player(world,factory.from_color(WHITE,size=(20,20)),390,270)
+    outer_top = Rect(world,factory.from_color(WHITE,size=(1200//SCALE,20//SCALE)),0//SCALE,0//SCALE)
+    static_components.append(outer_top.sprite)
+    outer_bottom = Rect(world,factory.from_color(WHITE,size=(1200//SCALE,20//SCALE)),0//SCALE,(1500-200)//SCALE)
+    static_components.append(outer_bottom.sprite)
+    outer_left = Rect(world,factory.from_color(WHITE,size=(20//SCALE,1500//SCALE)),0//SCALE,0//SCALE)
+    static_components.append(outer_left.sprite)
+    outer_right = Rect(world,factory.from_color(WHITE,size=(20//SCALE,1500//SCALE)),(1200-20)//SCALE,0//SCALE)
+    static_components.append(outer_right.sprite)
+    border_rect_top = Rect(world,factory.from_color(WHITE,size=(1000//SCALE,100//SCALE)),100//SCALE,100//SCALE)
+    static_components.append(border_rect_top.sprite)
+    border_rect_bottom = Rect(world,factory.from_color(WHITE,size=(1000//SCALE,100//SCALE)),100//SCALE,800//SCALE)
+    static_components.append(border_rect_bottom.sprite)
+    border_rect_left = Rect(world,factory.from_color(WHITE,size=(100//SCALE,600//SCALE)),100//SCALE,200//SCALE)
+    static_components.append(border_rect_left.sprite)
+    border_rect_right = Rect(world,factory.from_color(WHITE,size=(100//SCALE,600//SCALE)),1000//SCALE,200//SCALE)
+    static_components.append(border_rect_right.sprite)
+    base_mid_left = Rect(world,factory.from_color(WHITE,size=(200//SCALE,100//SCALE)),200//SCALE,1000//SCALE)
+    static_components.append(base_mid_left.sprite)
+    base_mid_right = Rect(world,factory.from_color(WHITE,size=(200//SCALE,100//SCALE)),800//SCALE,1000//SCALE)
+    static_components.append(base_mid_right.sprite)
+    base_mid_right2 = Rect(world,factory.from_color(WHITE,size=(30//SCALE,100//SCALE)),970//SCALE,1100//SCALE)
+    static_components.append(base_mid_right2.sprite)
+    # base_lower_left = Rect(world,factory.from_color(WHITE,size=(100,200)),100,1100)
+    # static_components.append(base_lower_left.sprite)
+    # base_lower_right = Rect(world,factory.from_color(WHITE,size=(100,200)),1000,1100)
+    # static_components.append(base_lower_right.sprite)
+    # base_lower_left2 = Rect(world,factory.from_color(WHITE,size=(100,200)),0,1200)
+    # static_components.append(base_lower_left2.sprite)
+
+    player = Player(world,factory.from_color(WHITE,size=(20//SCALE,20//SCALE)),(390+width_shift)//SCALE,(270+width_shift)//SCALE)
     movement.player = player
 
-    for y in range(0,(GHEIGHT+100)//100):
+    for y in range(0,(G_HEIGHT)//100):
         generate_row(movement,world,factory,y)
 
     running = True
@@ -191,11 +228,15 @@ def run():
             # rect.velocity.vy = 0
             rect.velocity.vy = UPRATE
 
+            _,posy = rect.sprite.position
+            if posy == -20 + height_shift:
+                movement.rects.remove(rect)
+
         time += 1
-        if time % 100 == 0:
+        if time % 50 == 0:
             generate_row(movement,world,factory)
 
-        if player.sprite.position[1] < 0:
+        if player.sprite.position[1] == height_shift:
             running = False
 
         sdl2.SDL_Delay(10)
