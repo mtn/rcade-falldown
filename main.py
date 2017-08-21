@@ -10,19 +10,20 @@ BACKGROUND = sdl2.ext.Color(0,0,0)
 RC_GREEN = sdl2.ext.Color(61,192,108)
 WHITE = sdl2.ext.Color(255,255,255)
 
-W_HEIGHT = 1500//SCALE
-W_WIDTH = 1200//SCALE
-G_HEIGHT = 600//SCALE
-G_WIDTH = 800//SCALE
+P_HEIGHT = 10
+W_HEIGHT = 750
+W_WIDTH = 600
+G_HEIGHT = 300
+G_WIDTH = 400
 
-width_shift = 200//SCALE
-height_shift = 200//SCALE
+width_shift = 100
+height_shift = 100
 
 static_components = []
 
 UPRATE = -1
-DOWNRATE = 5//SCALE
-HORIZ_SPEED = 5//SCALE
+DOWNRATE = 3
+HORIZ_SPEED = 2
 
 
 class MovementSystem(sdl2.ext.Applicator):
@@ -46,10 +47,15 @@ class MovementSystem(sdl2.ext.Applicator):
         return None
 
     def process(self,world,componentsets):
-        # count = 0
-        for velocity,sprite in componentsets:
-            # count += 1
+        count = 0
+        for comp in componentsets:
+            velocity,sprite = comp
             swidth,sheight = sprite.size
+            _,posy = sprite.position
+
+            if posy == height_shift - 10:
+                count += 1
+
 
             if not sprite == self.player.sprite:
                 sprite.x += velocity.vx
@@ -108,14 +114,7 @@ class TextureRenderSystem(sdl2.ext.TextureSpriteRenderSystem):
         self.renderer.color = BACKGROUND
         self.renderer.clear()
         self.renderer.color = tmp
-        print(len(components))
 
-        for comp in components:
-            posx,posy = comp.position
-            if posy == height_shift and comp not in static_components:
-                # print(posy)
-                components.remove(comp)
-            # print(comp)
         super(TextureRenderSystem,self).render(components)
         # super(TextureRenderSystem,self).render(reversed(components))
 
@@ -144,21 +143,26 @@ class Rect(sdl2.ext.Entity):
 
 def generate_row(movement,world,factory,y=G_HEIGHT//100):
     num_gaps = random.randint(1,5)
+    r_width = 0
     for j in range(0,num_gaps):
         min_x = j * G_WIDTH // num_gaps
         gap_width = 20 + random.randint(0,10)
-        l_padding = random.randint(1,G_WIDTH//num_gaps - gap_width-1)
-        r_width = math.ceil(G_WIDTH/num_gaps - l_padding - gap_width)
+        l_padding = random.randint(1,G_WIDTH//num_gaps - gap_width - 1)
 
         movement.rects.append(Rect(
             world,
-            factory.from_color(RC_GREEN,size=(l_padding,20//SCALE)),
-            (min_x+width_shift),
+            factory.from_color(RC_GREEN,size=(l_padding+r_width,P_HEIGHT)),
+            min_x+width_shift-r_width,
             y*100+height_shift+50))
-        movement.rects.append(Rect(
-            world,
-            factory.from_color(RC_GREEN,size=(r_width,20//SCALE)),
-            min_x+l_padding+gap_width+width_shift, y*100+height_shift+50))
+
+        r_width = G_WIDTH//num_gaps - l_padding - gap_width
+
+        if j == num_gaps - 1:
+            movement.rects.append(Rect(
+                world,
+                factory.from_color(WHITE,size=(r_width,P_HEIGHT)),
+                min_x+l_padding+gap_width+width_shift,
+                y*100+height_shift+50))
 
 def run():
     sdl2.ext.init()
@@ -255,7 +259,7 @@ def run():
             rect.velocity.vy = UPRATE
 
             _,posy = rect.sprite.position
-            if posy == -20 + height_shift:
+            if posy == height_shift - 10:
                 movement.rects.remove(rect)
 
         time += 1
