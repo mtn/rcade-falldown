@@ -1,6 +1,6 @@
 # RCade Falldown
 
-![demo](demo.gif)
+<img src="demo.gif" width="250px">
 
 Welcome to the RCade! :video_game: Don't get pinned against the top.
 
