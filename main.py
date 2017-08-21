@@ -22,7 +22,7 @@ static_components = []
 
 UPRATE = -1
 DOWNRATE = 5//SCALE
-HORIZ_SPEED = 3//SCALE
+HORIZ_SPEED = 5//SCALE
 
 
 class MovementSystem(sdl2.ext.Applicator):
@@ -46,7 +46,9 @@ class MovementSystem(sdl2.ext.Applicator):
         return None
 
     def process(self,world,componentsets):
+        # count = 0
         for velocity,sprite in componentsets:
+            # count += 1
             swidth,sheight = sprite.size
 
             if not sprite == self.player.sprite:
@@ -84,6 +86,7 @@ class MovementSystem(sdl2.ext.Applicator):
                 else:
                     if sprite.y + sheight > (self.maxy - 10):
                         sprite.y = self.maxy - 10 - sheight
+        # print(count)
 
 
 class SoftwareRenderSystem(sdl2.ext.SoftwareSpriteRenderSystem):
@@ -105,7 +108,16 @@ class TextureRenderSystem(sdl2.ext.TextureSpriteRenderSystem):
         self.renderer.color = BACKGROUND
         self.renderer.clear()
         self.renderer.color = tmp
-        super(TextureRenderSystem,self).render(reversed(components))
+        print(len(components))
+
+        for comp in components:
+            posx,posy = comp.position
+            if posy == height_shift and comp not in static_components:
+                # print(posy)
+                components.remove(comp)
+            # print(comp)
+        super(TextureRenderSystem,self).render(components)
+        # super(TextureRenderSystem,self).render(reversed(components))
 
 
 class Velocity(object):
@@ -146,8 +158,7 @@ def generate_row(movement,world,factory,y=G_HEIGHT//100):
         movement.rects.append(Rect(
             world,
             factory.from_color(RC_GREEN,size=(r_width,20//SCALE)),
-            min_x+l_padding+gap_width+width_shift,
-            y*100+height_shift+50))
+            min_x+l_padding+gap_width+width_shift, y*100+height_shift+50))
 
 def run():
     sdl2.ext.init()
