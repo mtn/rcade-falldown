@@ -7,6 +7,8 @@ Welcome to the RCade! :video_game: Don't get pinned against the top.
 ## Usage
 
     python3 main.py
+    
+Note that hardware acceleration is enabled by default. To run without this, append `-software`
 
 ## Dependencies
 
