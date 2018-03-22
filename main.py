@@ -234,6 +234,7 @@ def run():
 
     running = True
     time = 0
+    last_score = 0
     while running:
         for event in sdl2.ext.get_events():
             if event.type == sdl2.SDL_QUIT:
@@ -260,8 +261,13 @@ def run():
         if time % 50 == 0:
             generate_row(movement,world,factory)
 
+        if not last_score == time // 10:
+            print("Score: {}".format(last_score))
+        last_score = time // 10
+
         if player.sprite.position[1] == height_shift:
             running = False
+            print("You graduated :(")
 
         sdl2.SDL_Delay(10)
         world.process()
